@@ -8,6 +8,10 @@ const emailSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    send_to: {
+        type: String,
+        required: true
+    },
     sent_at: {
         type: Date,
         default: Date.now,

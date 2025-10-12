@@ -9,7 +9,14 @@ const commentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
+    },
+    event_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Event',
+        required: true
     }
 },{
     timestamps: true
 })
+
+export default mongoose.model('Comment', commentSchema);
