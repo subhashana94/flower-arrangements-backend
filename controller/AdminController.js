@@ -1,5 +1,6 @@
 import Admin from "../model/AdminModel.js";
 import bcrypt from "bcrypt";
+import {saveBase64Image} from "../utils/ImageHandler.js";
 
 export const createAdministrator = async (req, res) => {
     try {
@@ -8,13 +9,6 @@ export const createAdministrator = async (req, res) => {
         if (!full_name || full_name.trim().length === 0) {
             return res.status(400).json({
                 message: "Full name is required!",
-                success: false,
-            });
-        }
-
-        if (!user_image || user_image.trim().length === 0) {
-            return res.status(400).json({
-                message: "User image is required!",
                 success: false,
             });
         }
@@ -48,7 +42,19 @@ export const createAdministrator = async (req, res) => {
             return res.status(400).json({
                 message: "Email address already registered!",
                 success: false,
-            })
+            });
+        }
+
+        let imagePath = null;
+        if (user_image) {
+            try {
+                imagePath = await saveBase64Image(user_image, 'admins');
+            } catch (error) {
+                return res.status(400).json({
+                    message: "Error uploading image!",
+                    success: false
+                });
+            }
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -59,7 +65,7 @@ export const createAdministrator = async (req, res) => {
             contact_number: contact_number.trim(),
             email_address: email_address.trim().toLowerCase(),
             password: hashPassword,
-            user_image: user_image.trim()
+            user_image: imagePath,
         });
 
         await newAdministrator.save();
