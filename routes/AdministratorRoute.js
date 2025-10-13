@@ -1,8 +1,8 @@
 import express from 'express';
-import {loginAdministrator, registerAdministrator, updateAdministrator} from "../controller/AdminController.js";
-import { createRefreshTokenController, createLogoutController } from "../service/AuthService.js";
-
 import Admin from "../model/AdminModel.js";
+import { loginAdministrator, registerAdministrator, updateAdministrator } from "../controller/AdminController.js";
+import { createRefreshTokenController, createLogoutController } from "../service/AuthService.js";
+import { authenticateToken, isAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -18,15 +18,10 @@ router.post("/refresh-token", createRefreshTokenController(
     buildAdminTokenPayload
 ));
 
-router.post("/register", registerAdministrator);
+router.post("/register", authenticateToken, isAdmin, registerAdministrator);
 router.post("/login", loginAdministrator);
-router.put("/update/:id", updateAdministrator);
-
-
-router.post("/logout", createLogoutController(
-    Admin,
-    'refresh_token'
-));
+router.post("/logout", createLogoutController( Admin, 'refresh_token' ));
+router.put("/update/:id", authenticateToken, isAdmin, updateAdministrator);
 
 export default {
     path: '/admin',
