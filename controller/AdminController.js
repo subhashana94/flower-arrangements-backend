@@ -368,7 +368,9 @@ export const viewEmployeeHistory = async (req, res) => {
         const { search } = req.query;
 
         if (!search || search.trim().length === 0) {
-            const allHistory = await EmployeeHistoryModel.find().sort({ release_date: -1 });
+            const allHistory = await EmployeeHistoryModel.find()
+                .select('-__v')
+                .sort({ release_date: -1 });
 
             return res.status(200).json({
                 success: true,
@@ -381,9 +383,13 @@ export const viewEmployeeHistory = async (req, res) => {
             $or: [
                 { full_name: { $regex: search, $options: 'i' } },
                 { contact_number: { $regex: search, $options: 'i' } },
-                { email_address: { $regex: search, $options: 'i' } }
+                { email_address: { $regex: search, $options: 'i' } },
+                { occupation: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
             ]
-        }).sort({ release_date: -1 });
+        })
+            .select('-__v')
+            .sort({ release_date: -1 });
 
         if (employeeHistory.length === 0) {
             return res.status(404).json({
@@ -407,30 +413,3 @@ export const viewEmployeeHistory = async (req, res) => {
         });
     }
 };
-
-// GET ALL EMPLOYEE HISTORY
-export const viewAllEmployeeHistory = async (req, res) => {
-    try {
-        const employeeHistoryData = await EmployeeHistoryModel.find().sort({ release_date: -1 });
-
-        if (employeeHistoryData.length === 0) {
-            return res.status(404).json({
-                message: "Employee history not found!",
-                success: false
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            count: employeeHistoryData.length,
-            employees: employeeHistoryData
-        });
-
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: "Error searching employee history!",
-            error: error.message
-        });
-    }
-}
