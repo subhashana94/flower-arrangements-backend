@@ -1,6 +1,7 @@
 import express from 'express';
 import { loginAdministrator, registerAdministrator } from "../controller/AdminController.js";
 import { createRefreshTokenController, createLogoutController } from "../service/AuthService.js";
+
 import Admin from "../model/AdminModel.js";
 
 const router = express.Router();
