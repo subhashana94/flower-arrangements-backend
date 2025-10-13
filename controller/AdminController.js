@@ -407,3 +407,30 @@ export const viewEmployeeHistory = async (req, res) => {
         });
     }
 };
+
+// GET ALL EMPLOYEE HISTORY
+export const viewAllEmployeeHistory = async (req, res) => {
+    try {
+        const employeeHistoryData = await EmployeeHistoryModel.find().sort({ release_date: -1 });
+
+        if (employeeHistoryData.length === 0) {
+            return res.status(404).json({
+                message: "Employee history not found!",
+                success: false
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            count: employeeHistoryData.length,
+            employees: employeeHistoryData
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error searching employee history!",
+            error: error.message
+        });
+    }
+}
