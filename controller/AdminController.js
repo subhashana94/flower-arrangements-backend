@@ -2,7 +2,7 @@ import Admin from "../model/AdminModel.js";
 import bcrypt from "bcrypt";
 import {saveBase64Image} from "../utils/ImageHandler.js";
 
-export const createAdministrator = async (req, res) => {
+export const registerAdministrator = async (req, res) => {
     try {
         const {full_name, contact_number, email_address, password, user_image} = req.body;
 
@@ -87,6 +87,67 @@ export const createAdministrator = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Administrator registration failed!",
+            error: error.message
+        });
+    }
+}
+
+export const loginAdministrator = async (req, res) => {
+    try {
+
+        const {email_address, password} = req.body;
+
+        if (!password || password.trim().length === 0 ) {
+            return res.status(400).json({
+                message: "Password is required!",
+                success: false,
+            });
+        }
+
+        if (!email_address || email_address.trim().length === 0) {
+            return res.status(400).json({
+                message: "Email address is required!",
+                success: false,
+            });
+        }
+
+        const adminExists = await Admin.findOne({
+            email_address: email_address.trim().toLowerCase()
+        });
+
+        if (!adminExists) {
+            return res.status(400).json({
+                message: "Not registered administrator by this email address!",
+                success: false,
+            });
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, adminExists.password);
+
+        if (!isPasswordValid) {
+            return res.status(400).json({
+                message: "Invalid password!",
+                success: false,
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Successfully registered!",
+            administrator: {
+                id: adminExists._id,
+                full_name: adminExists.full_name,
+                email_address: adminExists.email_address,
+                contact_number: adminExists.contact_number,
+                user_image: adminExists.user_image,
+                createdAt: adminExists.createdAt
+            }
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error logging administrator!",
             error: error.message
         });
     }
