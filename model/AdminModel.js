@@ -11,7 +11,8 @@ const adminSchema = new mongoose.Schema({
     },
     email_address: {
         type: String,
-        unique: true,
+        required: true,
+        unique: true
     },
     password: {
         type: String,
@@ -20,10 +21,13 @@ const adminSchema = new mongoose.Schema({
     user_image: {
         type: String,
         default: null,
+    },
+    refresh_token: {
+        type: String,
+        default: null
     }
-
-},{
+}, {
     timestamps: true,
-})
+});
 
 export default mongoose.model('Admin', adminSchema);

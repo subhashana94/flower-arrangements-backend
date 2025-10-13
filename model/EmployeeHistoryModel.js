@@ -13,6 +13,9 @@ const employeeHistoryModelSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    user_image: {
+        type: String,
+    },
     registered_date: {
         type: Date,
         required: true,
@@ -21,6 +24,10 @@ const employeeHistoryModelSchema = new mongoose.Schema({
         type: Date,
         required: true,
         default: Date.now
+    },
+    occupation: {
+        type: String,
+        default: "Administrator"
     },
     description: {
         type: String,

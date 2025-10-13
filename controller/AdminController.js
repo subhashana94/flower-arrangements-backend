@@ -1,8 +1,7 @@
 import Admin from "../model/AdminModel.js";
-import {deleteImage, saveBase64Image, updateImage} from "../utils/ImageHandler.js";
-import {hashPassword, loginWithToken} from "../service/AuthService.js";
-import mongoose from "mongoose";
 import EmployeeHistoryModel from "../model/EmployeeHistoryModel.js";
+import { saveBase64Image, updateImage, deleteImage } from "../utils/ImageHandler.js";
+import { loginWithToken, hashPassword } from "../service/AuthService.js";
 
 // REGISTER ADMINISTRATOR
 export const registerAdministrator = async (req, res) => {
@@ -128,48 +127,46 @@ export const loginAdministrator = async (req, res) => {
     });
 };
 
-// VIEW ADMINISTRATOR
+// VIEW ADMINISTRATOR PROFILE
 export const viewAdministrator = async (req, res) => {
     try {
         const id = req.user.id;
 
-        const existingAdmin = await Admin.findById(id).select('-password -__v');
+        const admin = await Admin.findById(id).select('-password -__v -refresh_token');
 
-        if (!existingAdmin) {
+        if (!admin) {
             return res.status(404).json({
                 message: "Administrator not found!",
                 success: false
             });
-
-        } else {
-            return res.status(200).json({
-                success: true,
-                administrator: {
-                    id: existingAdmin._id,
-                    full_name: existingAdmin.full_name,
-                    email_address: existingAdmin.email_address,
-                    contact_number: existingAdmin.contact_number,
-                    user_image: existingAdmin.user_image,
-                    createdAt: existingAdmin.createdAt,
-                    updatedAt: existingAdmin.updatedAt
-                }
-            });
         }
+
+        return res.status(200).json({
+            success: true,
+            administrator: {
+                id: admin._id,
+                full_name: admin.full_name,
+                email_address: admin.email_address,
+                contact_number: admin.contact_number,
+                user_image: admin.user_image,
+                createdAt: admin.createdAt,
+                updatedAt: admin.updatedAt
+            }
+        });
 
     } catch (error) {
         return res.status(500).json({
             success: false,
             message: "Error viewing administrator!",
             error: error.message
-        })
+        });
     }
-}
+};
 
 // UPDATE ADMINISTRATOR
 export const updateAdministrator = async (req, res) => {
     try {
-
-        const { full_name, contact_number, email_address, password, user_image} = req.body;
+        const { full_name, contact_number, email_address, password, user_image } = req.body;
         const { id } = req.params;
 
         const existingAdmin = await Admin.findById(id);
@@ -179,82 +176,81 @@ export const updateAdministrator = async (req, res) => {
                 message: "Administrator not found!",
                 success: false
             });
-
-        } else {
-
-            if (!full_name || full_name.trim().length === 0) {
-                return res.status(400).json({message: "Full name is required!", success: false});
-            }
-
-            if (!contact_number || contact_number.trim().length === 0) {
-                return res.status(400).json({message: "Contact number is required!", success: false});
-            }
-
-            if (!email_address || email_address.trim().length === 0) {
-                return res.status(400).json({message: "Email address is required!", success: false});
-            }
-
-            if (email_address.trim().toLowerCase() !== existingAdmin.email_address) {
-                const emailExists = await Admin.findOne({
-                    email_address: email_address.trim().toLowerCase(),
-                    _id: { $ne: id }
-                });
-
-                if (emailExists) {
-                    return res.status(400).json({
-                        message: "Email address already in use by another administrator!",
-                        success: false
-                    });
-                }
-            }
-
-            const updateData = {
-                full_name: full_name.trim(),
-                contact_number: contact_number.trim(),
-                email_address: email_address.trim().toLowerCase()
-            };
-
-            if (user_image) {
-                try {
-                    updateData.user_image = await updateImage(
-                        existingAdmin.user_image,
-                        user_image,
-                        'admins'
-                    );
-                } catch (error) {
-                    return res.status(400).json({
-                        message: "Error uploading image!",
-                        success: false,
-                        error: error.message
-                    });
-                }
-            }
-
-            if (password && password.trim().length > 0) {
-                if (password.length < 6) {
-                    return res.status(400).json({
-                        message: "Password must be at least 6 characters!",
-                        success: false
-                    });
-                }
-                updateData.password = await hashPassword(password);
-            }
-
-            const updatedAdmin = await Admin.findByIdAndUpdate(id, updateData, { new: true });
-
-            return res.status(200).json({
-                success: true,
-                message: "Administrator successfully updated!",
-                administrator: {
-                    id: updatedAdmin._id,
-                    full_name: updatedAdmin.full_name,
-                    email_address: updatedAdmin.email_address,
-                    contact_number: updatedAdmin.contact_number,
-                    user_image: updatedAdmin.user_image,
-                    updatedAt: updatedAdmin.updatedAt
-                }
-            });
         }
+
+        if (!full_name || full_name.trim().length === 0) {
+            return res.status(400).json({ message: "Full name is required!", success: false });
+        }
+
+        if (!contact_number || contact_number.trim().length === 0) {
+            return res.status(400).json({ message: "Contact number is required!", success: false });
+        }
+
+        if (!email_address || email_address.trim().length === 0) {
+            return res.status(400).json({ message: "Email address is required!", success: false });
+        }
+
+        if (email_address.trim().toLowerCase() !== existingAdmin.email_address) {
+            const emailExists = await Admin.findOne({
+                email_address: email_address.trim().toLowerCase(),
+                _id: { $ne: id }
+            });
+
+            if (emailExists) {
+                return res.status(400).json({
+                    message: "Email address already in use by another administrator!",
+                    success: false
+                });
+            }
+        }
+
+        const updateData = {
+            full_name: full_name.trim(),
+            contact_number: contact_number.trim(),
+            email_address: email_address.trim().toLowerCase()
+        };
+
+        if (user_image) {
+            try {
+                updateData.user_image = await updateImage(
+                    existingAdmin.user_image,
+                    user_image,
+                    'admins'
+                );
+            } catch (error) {
+                return res.status(400).json({
+                    message: "Error uploading image!",
+                    success: false,
+                    error: error.message
+                });
+            }
+        }
+
+        if (password && password.trim().length > 0) {
+            if (password.length < 6) {
+                return res.status(400).json({
+                    message: "Password must be at least 6 characters!",
+                    success: false
+                });
+            }
+            updateData.password = await hashPassword(password);
+        }
+
+        const updatedAdmin = await Admin.findByIdAndUpdate(id, updateData, { new: true });
+
+        return res.status(200).json({
+            success: true,
+            message: "Administrator successfully updated!",
+            administrator: {
+                id: updatedAdmin._id,
+                full_name: updatedAdmin.full_name,
+                email_address: updatedAdmin.email_address,
+                contact_number: updatedAdmin.contact_number,
+                user_image: updatedAdmin.user_image,
+                updatedAt: updatedAdmin.updatedAt
+            }
+        });
+
     } catch (error) {
         return res.status(500).json({
             success: false,
@@ -262,67 +258,152 @@ export const updateAdministrator = async (req, res) => {
             error: error.message
         });
     }
-}
+};
 
 // DELETE ADMINISTRATOR
 export const deleteAdministrator = async (req, res) => {
-
-    const session = await mongoose.startSession();
-
     try {
-        session.startTransaction();
-
         const { id } = req.params;
+        const { description, occupation } = req.body;
 
-        const existingAdmin = await Admin.findById(id).session(session);
+        const existingAdmin = await Admin.findById(id);
 
         if (!existingAdmin) {
             return res.status(404).json({
                 message: "Administrator not found!",
                 success: false
             });
-
-        } else {
-            const employeeHistory = new EmployeeHistoryModel({
-                full_name: existingAdmin.full_name,
-                contact_number: existingAdmin.contact_number,
-                email_address: existingAdmin.email_address,
-                registered_date: existingAdmin.createdAt,
-                release_date: new Date(),
-                description: req.body.description || "Admin account deleted",
-                admin_id: existingAdmin._id
-            });
-
-            await employeeHistory.save({ session });
-
-            await Admin.findByIdAndDelete(id).session(session);
-
-            if (existingAdmin.user_image) {
-                deleteImage(existingAdmin.user_image);
-            }
-
-            await session.commitTransaction();
-            session.endSession();
-
-            return res.status(200).json({
-                message: `${existingAdmin.full_name} successfully deleted!`,
-                success: true,
-                history: {
-                    id: employeeHistory._id,
-                    full_name: employeeHistory.full_name,
-                    email_address: employeeHistory.email_address,
-                    release_date: employeeHistory.release_date
-                }
-            });
         }
-    } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
 
-        return res.status(400).json({
+        const employeeHistory = new EmployeeHistoryModel({
+            full_name: existingAdmin.full_name,
+            contact_number: existingAdmin.contact_number,
+            email_address: existingAdmin.email_address,
+            user_image: existingAdmin.user_image,
+            registered_date: existingAdmin.createdAt,
+            release_date: new Date(),
+            occupation: occupation || "Administrator",
+            description: description || "Admin account deleted",
+            admin_id: existingAdmin._id
+        });
+
+        await employeeHistory.save();
+        await Admin.findByIdAndDelete(id);
+
+        if (existingAdmin.user_image) {
+            deleteImage(existingAdmin.user_image);
+        }
+
+        return res.status(200).json({
+            message: `${existingAdmin.full_name} successfully deleted!`,
+            success: true,
+            history: {
+                id: employeeHistory._id,
+                full_name: employeeHistory.full_name,
+                email_address: employeeHistory.email_address,
+                occupation: employeeHistory.occupation,
+                description: employeeHistory.description,
+                release_date: employeeHistory.release_date
+            }
+        });
+
+    } catch (error) {
+        return res.status(500).json({
             message: "Error deleting administrator!",
             success: false,
             error: error.message
         });
     }
-}
+};
+
+// SEARCH ADMINISTRATORS
+export const searchAdministrators = async (req, res) => {
+    try {
+        const { search } = req.query;
+
+        if (!search || search.trim().length === 0) {
+            const allAdmins = await Admin.find().select('-password -refresh_token').sort({ createdAt: -1 });
+
+            return res.status(200).json({
+                success: true,
+                count: allAdmins.length,
+                administrators: allAdmins
+            });
+        }
+
+        const administrators = await Admin.find({
+            $or: [
+                { full_name: { $regex: search, $options: 'i' } },
+                { contact_number: { $regex: search, $options: 'i' } },
+                { email_address: { $regex: search, $options: 'i' } }
+            ]
+        }).select('-password -refresh_token').sort({ createdAt: -1 });
+
+        if (administrators.length === 0) {
+            return res.status(404).json({
+                message: `No administrator found matching "${search}"`,
+                success: false
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            count: administrators.length,
+            search_term: search,
+            administrators: administrators
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error searching administrators!",
+            error: error.message
+        });
+    }
+};
+
+// SEARCH EMPLOYEE HISTORY
+export const viewEmployeeHistory = async (req, res) => {
+    try {
+        const { search } = req.query;
+
+        if (!search || search.trim().length === 0) {
+            const allHistory = await EmployeeHistoryModel.find().sort({ release_date: -1 });
+
+            return res.status(200).json({
+                success: true,
+                count: allHistory.length,
+                employees: allHistory
+            });
+        }
+
+        const employeeHistory = await EmployeeHistoryModel.find({
+            $or: [
+                { full_name: { $regex: search, $options: 'i' } },
+                { contact_number: { $regex: search, $options: 'i' } },
+                { email_address: { $regex: search, $options: 'i' } }
+            ]
+        }).sort({ release_date: -1 });
+
+        if (employeeHistory.length === 0) {
+            return res.status(404).json({
+                message: `No employee found matching "${search}"`,
+                success: false
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            count: employeeHistory.length,
+            search_term: search,
+            employees: employeeHistory
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error searching employee history!",
+            error: error.message
+        });
+    }
+};
