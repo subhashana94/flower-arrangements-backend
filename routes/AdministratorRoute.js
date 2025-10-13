@@ -1,5 +1,5 @@
 import express from 'express';
-import { loginAdministrator, registerAdministrator } from "../controller/AdminController.js";
+import {loginAdministrator, registerAdministrator, updateAdministrator} from "../controller/AdminController.js";
 import { createRefreshTokenController, createLogoutController } from "../service/AuthService.js";
 
 import Admin from "../model/AdminModel.js";
@@ -12,14 +12,16 @@ const buildAdminTokenPayload = (admin) => ({
     role: 'admin'
 });
 
-router.post("/register", registerAdministrator);
-router.post("/login", loginAdministrator);
-
 router.post("/refresh-token", createRefreshTokenController(
     Admin,
     'refresh_token',
     buildAdminTokenPayload
 ));
+
+router.post("/register", registerAdministrator);
+router.post("/login", loginAdministrator);
+router.put("/update/:id", updateAdministrator);
+
 
 router.post("/logout", createLogoutController(
     Admin,

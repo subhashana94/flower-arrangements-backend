@@ -1,6 +1,6 @@
 import Admin from "../model/AdminModel.js";
-import { saveBase64Image } from "../utils/ImageHandler.js";
-import { loginWithToken, hashPassword } from "../service/AuthService.js";
+import {saveBase64Image, updateImage} from "../utils/ImageHandler.js";
+import {hashPassword, loginWithToken} from "../service/AuthService.js";
 
 // REGISTER ADMINISTRATOR
 export const registerAdministrator = async (req, res) => {
@@ -125,3 +125,102 @@ export const loginAdministrator = async (req, res) => {
         }
     });
 };
+
+// UPDATE ADMINISTRATOR
+export const updateAdministrator = async (req, res) => {
+    try {
+
+        const { full_name, contact_number, email_address, password, user_image} = req.body;
+        const { id } = req.params;
+
+        const existingAdmin = await Admin.findById(id);
+
+        if (!existingAdmin) {
+            return res.status(404).json({
+                message: "Administrator not found!",
+                success: false
+            });
+
+        } else {
+
+            if (!full_name || full_name.trim().length === 0) {
+                return res.status(400).json({message: "Full name is required!", success: false});
+            }
+
+            if (!contact_number || contact_number.trim().length === 0) {
+                return res.status(400).json({message: "Contact number is required!", success: false});
+            }
+
+            if (!email_address || email_address.trim().length === 0) {
+                return res.status(400).json({message: "Email address is required!", success: false});
+            }
+
+            if (email_address.trim().toLowerCase() !== existingAdmin.email_address) {
+                const emailExists = await Admin.findOne({
+                    email_address: email_address.trim().toLowerCase(),
+                    _id: { $ne: id }
+                });
+
+                if (emailExists) {
+                    return res.status(400).json({
+                        message: "Email address already in use by another administrator!",
+                        success: false
+                    });
+                }
+            }
+
+            const updateData = {
+                full_name: full_name.trim(),
+                contact_number: contact_number.trim(),
+                email_address: email_address.trim().toLowerCase()
+            };
+
+            if (user_image) {
+                try {
+                    updateData.user_image = await updateImage(
+                        existingAdmin.user_image,
+                        user_image,
+                        'admins'
+                    );
+                } catch (error) {
+                    return res.status(400).json({
+                        message: "Error uploading image!",
+                        success: false,
+                        error: error.message
+                    });
+                }
+            }
+
+            if (password && password.trim().length > 0) {
+                if (password.length < 6) {
+                    return res.status(400).json({
+                        message: "Password must be at least 6 characters!",
+                        success: false
+                    });
+                }
+                updateData.password = await hashPassword(password);
+            }
+
+            const updatedAdmin = await Admin.findByIdAndUpdate(id, updateData, { new: true });
+
+            return res.status(200).json({
+                success: true,
+                message: "Administrator successfully updated!",
+                administrator: {
+                    id: updatedAdmin._id,
+                    full_name: updatedAdmin.full_name,
+                    email_address: updatedAdmin.email_address,
+                    contact_number: updatedAdmin.contact_number,
+                    user_image: updatedAdmin.user_image,
+                    updatedAt: updatedAdmin.updatedAt
+                }
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error updating administrator!",
+            error: error.message
+        });
+    }
+}
