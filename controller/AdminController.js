@@ -1,6 +1,8 @@
 import Admin from "../model/AdminModel.js";
-import {saveBase64Image, updateImage} from "../utils/ImageHandler.js";
+import {deleteImage, saveBase64Image, updateImage} from "../utils/ImageHandler.js";
 import {hashPassword, loginWithToken} from "../service/AuthService.js";
+import mongoose from "mongoose";
+import EmployeeHistoryModel from "../model/EmployeeHistoryModel.js";
 
 // REGISTER ADMINISTRATOR
 export const registerAdministrator = async (req, res) => {
@@ -126,6 +128,43 @@ export const loginAdministrator = async (req, res) => {
     });
 };
 
+// VIEW ADMINISTRATOR
+export const viewAdministrator = async (req, res) => {
+    try {
+        const id = req.user.id;
+
+        const existingAdmin = await Admin.findById(id).select('-password -__v');
+
+        if (!existingAdmin) {
+            return res.status(404).json({
+                message: "Administrator not found!",
+                success: false
+            });
+
+        } else {
+            return res.status(200).json({
+                success: true,
+                administrator: {
+                    id: existingAdmin._id,
+                    full_name: existingAdmin.full_name,
+                    email_address: existingAdmin.email_address,
+                    contact_number: existingAdmin.contact_number,
+                    user_image: existingAdmin.user_image,
+                    createdAt: existingAdmin.createdAt,
+                    updatedAt: existingAdmin.updatedAt
+                }
+            });
+        }
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error viewing administrator!",
+            error: error.message
+        })
+    }
+}
+
 // UPDATE ADMINISTRATOR
 export const updateAdministrator = async (req, res) => {
     try {
@@ -220,6 +259,69 @@ export const updateAdministrator = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Error updating administrator!",
+            error: error.message
+        });
+    }
+}
+
+// DELETE ADMINISTRATOR
+export const deleteAdministrator = async (req, res) => {
+
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        const { id } = req.params;
+
+        const existingAdmin = await Admin.findById(id).session(session);
+
+        if (!existingAdmin) {
+            return res.status(404).json({
+                message: "Administrator not found!",
+                success: false
+            });
+
+        } else {
+            const employeeHistory = new EmployeeHistoryModel({
+                full_name: existingAdmin.full_name,
+                contact_number: existingAdmin.contact_number,
+                email_address: existingAdmin.email_address,
+                registered_date: existingAdmin.createdAt,
+                release_date: new Date(),
+                description: req.body.description || "Admin account deleted",
+                admin_id: existingAdmin._id
+            });
+
+            await employeeHistory.save({ session });
+
+            await Admin.findByIdAndDelete(id).session(session);
+
+            if (existingAdmin.user_image) {
+                deleteImage(existingAdmin.user_image);
+            }
+
+            await session.commitTransaction();
+            session.endSession();
+
+            return res.status(200).json({
+                message: `${existingAdmin.full_name} successfully deleted!`,
+                success: true,
+                history: {
+                    id: employeeHistory._id,
+                    full_name: employeeHistory.full_name,
+                    email_address: employeeHistory.email_address,
+                    release_date: employeeHistory.release_date
+                }
+            });
+        }
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+
+        return res.status(400).json({
+            message: "Error deleting administrator!",
+            success: false,
             error: error.message
         });
     }
