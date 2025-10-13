@@ -34,7 +34,6 @@ mongoose.connect(MONGO_URL).then((connection) => {
 
     routes.forEach(route => {
         app.use(BASE_PATH + route.path, route.router);
-        console.log(`✅ Route mounted: ${BASE_PATH}${route.path}`);
     });
 
     app.listen(PORT, () => {

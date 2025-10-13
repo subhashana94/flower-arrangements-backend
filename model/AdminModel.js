@@ -20,7 +20,12 @@ const adminSchema = new mongoose.Schema({
     user_image: {
         type: String,
         default: null,
+    },
+    refresh_token: {
+        type: String,
+        default: null
     }
+
 },{
     timestamps: true,
 })
