@@ -29,9 +29,16 @@ const eventSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    admin_id: {
+    special_requirements: {
+        type: String,
+    },
+    arrangement_crew: {
+        type: String,
+        required: true,
+    },
+    package_id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Admin',
+        ref: 'Package',
         required: true,
     }
 },{

@@ -1,0 +1,65 @@
+import Package from '../model/PackageModel.js';
+
+export const createPackage = async (req, res) => {
+    try {
+        const {package_name, package_features, general_price, promotional_price, is_active} = req.body;
+
+        if (!package_name || package_name.trim().length === 0) {
+            return res.status(400).json({ message: "Package name is required!", success: false });
+        }
+
+        if (!package_features || package_features.trim().length === 0) {
+            return res.status(400).json({ message: "Package features are required!", success: false });
+        }
+
+        if (!general_price || isNaN(general_price) || general_price <= 0) {
+            return res.status(400).json({ message: "Valid general price is required!", success: false });
+        }
+
+        if (promotional_price && (isNaN(promotional_price) || promotional_price < 0)) {
+            return res.status(400).json({ message: "Promotional price must be a valid number!", success: false });
+        }
+
+        const packageExists = await Package.findOne({
+            package_name: package_name.trim().toUpperCase(),
+        });
+
+        if (packageExists) {
+            return res.status(400).json({
+                message: "Package with this name already exists!",
+                success: false
+            });
+        }
+
+        const newPackage = new Package({
+            package_name: package_name.trim().toUpperCase(),
+            package_features: package_features.trim(),
+            general_price: Number(general_price),
+            promotional_price: promotional_price ? Number(promotional_price) : Number(general_price),
+            is_active: is_active !== undefined ? Boolean(is_active) : true,
+        });
+
+        await newPackage.save();
+
+        return res.status(201).json({
+            success: true,
+            message: "Package successfully created!",
+            package: {
+                id: newPackage._id,
+                package_name: newPackage.package_name,
+                package_features: newPackage.package_features,
+                general_price: newPackage.general_price,
+                promotional_price: newPackage.promotional_price,
+                is_active: newPackage.is_active,
+                createdAt: newPackage.createdAt
+            }
+        });
+
+    } catch (error) {
+        return res.status(500).send({
+            success: false,
+            message: "Package creation failed!",
+            error: error.message,
+        })
+    }
+}

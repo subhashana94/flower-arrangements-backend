@@ -1,7 +1,9 @@
 import AdministratorRoute from "./AdministratorRoute.js";
+import PackageRoute from "./PackageRoute.js";
 
 const routes = [
-    AdministratorRoute
+    AdministratorRoute,
+    PackageRoute
 ];
 
 export default routes;

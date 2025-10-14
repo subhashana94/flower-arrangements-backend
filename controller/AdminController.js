@@ -73,7 +73,7 @@ export const registerAdministrator = async (req, res) => {
             error: error.message
         });
     }
-};
+}
 
 // LOGIN ADMINISTRATOR
 export const loginAdministrator = async (req, res) => {
