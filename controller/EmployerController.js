@@ -93,3 +93,53 @@ export const registerEmployee = async (req, res) => {
         });
     }
 }
+
+// SEARCH EMPLOYEE
+export const searchEmployee = async (req, res) => {
+    try {
+        const {search} = req.query;
+
+        if (!search || search.trim().length === 0) {
+            const allEmployee = await Employee.find()
+                .select('-__v')
+                .sort({createdAt: -1});
+
+            return res.status(200).json({
+                success: true,
+                count: allEmployee.length,
+                employees: allEmployee
+            });
+        }
+
+        const employee = await Employee.find({
+            $or: [
+                {full_name: {$regex: search, $options: 'i'}},
+                {contact_number: {$regex: search, $options: 'i'}},
+                {email_address: {$regex: search, $options: 'i'}},
+                {occupation: {$regex: search, $options: 'i'}},
+                {permanent_address: {$regex: search, $options: 'i'}}
+            ]
+        }).select('-__v').sort({createdAt: -1});
+
+        if (employee.length === 0) {
+            return res.status(404).json({
+                message: `No employee found matching "${search}"`,
+                success: false
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            count: employee.length,
+            search_term: search,
+            employees: employee
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error searching employee!",
+            error: error.message
+        });
+    }
+};
