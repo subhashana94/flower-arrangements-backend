@@ -1,27 +1,27 @@
 import Admin from "../model/AdminModel.js";
 import EmployeeHistoryModel from "../model/EmployeeHistoryModel.js";
-import { saveBase64Image, updateImage, deleteImage } from "../utils/ImageHandler.js";
-import { loginWithToken, hashPassword } from "../service/AuthService.js";
+import {saveBase64Image, updateImage, deleteImage} from "../utils/ImageHandler.js";
+import {loginWithToken, hashPassword} from "../service/AuthService.js";
 
 // REGISTER ADMINISTRATOR
 export const registerAdministrator = async (req, res) => {
     try {
-        const { full_name, contact_number, email_address, password, user_image } = req.body;
+        const {full_name, contact_number, email_address, password, user_image} = req.body;
 
         if (!full_name || full_name.trim().length === 0) {
-            return res.status(400).json({ message: "Full name is required!", success: false });
+            return res.status(400).json({message: "Full name is required!", success: false});
         }
 
         if (!contact_number || contact_number.trim().length === 0) {
-            return res.status(400).json({ message: "Contact number is required!", success: false });
+            return res.status(400).json({message: "Contact number is required!", success: false});
         }
 
         if (!password || password.length < 6) {
-            return res.status(400).json({ message: "Password must be at least 6 characters!", success: false });
+            return res.status(400).json({message: "Password must be at least 6 characters!", success: false});
         }
 
         if (!email_address || email_address.trim().length === 0) {
-            return res.status(400).json({ message: "Email address is required!", success: false });
+            return res.status(400).json({message: "Email address is required!", success: false});
         }
 
         const adminExists = await Admin.findOne({
@@ -29,7 +29,7 @@ export const registerAdministrator = async (req, res) => {
         });
 
         if (adminExists) {
-            return res.status(400).json({ message: "Email address already registered!", success: false });
+            return res.status(400).json({message: "Email address already registered!", success: false});
         }
 
         let imagePath = null;
@@ -37,7 +37,7 @@ export const registerAdministrator = async (req, res) => {
             try {
                 imagePath = await saveBase64Image(user_image, 'admins');
             } catch (error) {
-                return res.status(400).json({ message: "Error uploading image!", success: false });
+                return res.status(400).json({message: "Error uploading image!", success: false});
             }
         }
 
@@ -77,14 +77,14 @@ export const registerAdministrator = async (req, res) => {
 
 // LOGIN ADMINISTRATOR
 export const loginAdministrator = async (req, res) => {
-    const { email_address, password } = req.body;
+    const {email_address, password} = req.body;
 
     if (!email_address || email_address.trim().length === 0) {
-        return res.status(400).json({ message: "Email address is required!", success: false });
+        return res.status(400).json({message: "Email address is required!", success: false});
     }
 
     if (!password || password.trim().length === 0) {
-        return res.status(400).json({ message: "Password is required!", success: false });
+        return res.status(400).json({message: "Password is required!", success: false});
     }
 
     const buildAdminTokenPayload = (admin) => ({
@@ -166,8 +166,8 @@ export const viewAdministrator = async (req, res) => {
 // UPDATE ADMINISTRATOR
 export const updateAdministrator = async (req, res) => {
     try {
-        const { full_name, contact_number, email_address, password, user_image } = req.body;
-        const { id } = req.params;
+        const {full_name, contact_number, email_address, password, user_image} = req.body;
+        const {id} = req.params;
 
         const existingAdmin = await Admin.findById(id);
 
@@ -179,21 +179,21 @@ export const updateAdministrator = async (req, res) => {
         }
 
         if (!full_name || full_name.trim().length === 0) {
-            return res.status(400).json({ message: "Full name is required!", success: false });
+            return res.status(400).json({message: "Full name is required!", success: false});
         }
 
         if (!contact_number || contact_number.trim().length === 0) {
-            return res.status(400).json({ message: "Contact number is required!", success: false });
+            return res.status(400).json({message: "Contact number is required!", success: false});
         }
 
         if (!email_address || email_address.trim().length === 0) {
-            return res.status(400).json({ message: "Email address is required!", success: false });
+            return res.status(400).json({message: "Email address is required!", success: false});
         }
 
         if (email_address.trim().toLowerCase() !== existingAdmin.email_address) {
             const emailExists = await Admin.findOne({
                 email_address: email_address.trim().toLowerCase(),
-                _id: { $ne: id }
+                _id: {$ne: id}
             });
 
             if (emailExists) {
@@ -236,7 +236,7 @@ export const updateAdministrator = async (req, res) => {
             updateData.password = await hashPassword(password);
         }
 
-        const updatedAdmin = await Admin.findByIdAndUpdate(id, updateData, { new: true });
+        const updatedAdmin = await Admin.findByIdAndUpdate(id, updateData, {new: true});
 
         return res.status(200).json({
             success: true,
@@ -263,8 +263,8 @@ export const updateAdministrator = async (req, res) => {
 // DELETE ADMINISTRATOR
 export const deleteAdministrator = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { description, occupation } = req.body;
+        const {id} = req.params;
+        const {description, occupation} = req.body;
 
         const existingAdmin = await Admin.findById(id);
 
@@ -319,10 +319,10 @@ export const deleteAdministrator = async (req, res) => {
 // SEARCH ADMINISTRATORS
 export const searchAdministrators = async (req, res) => {
     try {
-        const { search } = req.query;
+        const {search} = req.query;
 
         if (!search || search.trim().length === 0) {
-            const allAdmins = await Admin.find().select('-password -refresh_token').sort({ createdAt: -1 });
+            const allAdmins = await Admin.find().select('-password -refresh_token').sort({createdAt: -1});
 
             return res.status(200).json({
                 success: true,
@@ -333,11 +333,11 @@ export const searchAdministrators = async (req, res) => {
 
         const administrators = await Admin.find({
             $or: [
-                { full_name: { $regex: search, $options: 'i' } },
-                { contact_number: { $regex: search, $options: 'i' } },
-                { email_address: { $regex: search, $options: 'i' } }
+                {full_name: {$regex: search, $options: 'i'}},
+                {contact_number: {$regex: search, $options: 'i'}},
+                {email_address: {$regex: search, $options: 'i'}}
             ]
-        }).select('-password -refresh_token').sort({ createdAt: -1 });
+        }).select('-password -refresh_token').sort({createdAt: -1});
 
         if (administrators.length === 0) {
             return res.status(404).json({
@@ -365,12 +365,12 @@ export const searchAdministrators = async (req, res) => {
 // SEARCH EMPLOYEE HISTORY
 export const viewEmployeeHistory = async (req, res) => {
     try {
-        const { search } = req.query;
+        const {search} = req.query;
 
         if (!search || search.trim().length === 0) {
             const allHistory = await EmployeeHistoryModel.find()
                 .select('-__v')
-                .sort({ release_date: -1 });
+                .sort({release_date: -1});
 
             return res.status(200).json({
                 success: true,
@@ -381,15 +381,15 @@ export const viewEmployeeHistory = async (req, res) => {
 
         const employeeHistory = await EmployeeHistoryModel.find({
             $or: [
-                { full_name: { $regex: search, $options: 'i' } },
-                { contact_number: { $regex: search, $options: 'i' } },
-                { email_address: { $regex: search, $options: 'i' } },
-                { occupation: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } }
+                {full_name: {$regex: search, $options: 'i'}},
+                {contact_number: {$regex: search, $options: 'i'}},
+                {email_address: {$regex: search, $options: 'i'}},
+                {occupation: {$regex: search, $options: 'i'}},
+                {description: {$regex: search, $options: 'i'}}
             ]
         })
             .select('-__v')
-            .sort({ release_date: -1 });
+            .sort({release_date: -1});
 
         if (employeeHistory.length === 0) {
             return res.status(404).json({
