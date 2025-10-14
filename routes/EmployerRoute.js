@@ -7,6 +7,6 @@ const router = express.Router();
 router.post("/register", authenticateToken, isAdmin, registerEmployee);
 
 export default {
-    path: '/package',
+    path: '/employee',
     router: router
 };

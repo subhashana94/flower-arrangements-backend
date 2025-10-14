@@ -7,7 +7,6 @@ import {
     updateAdministrator,
     viewAdministrator,
     searchAdministrators,
-    viewEmployeeHistory,
 } from "../controller/AdminController.js";
 import { createRefreshTokenController, createLogoutController } from "../service/AuthService.js";
 import { authenticateToken, isAdmin } from "../middleware/authMiddleware.js";
@@ -28,7 +27,6 @@ router.get("/profile", authenticateToken, isAdmin, viewAdministrator);
 router.get("/search-admin", authenticateToken, isAdmin, searchAdministrators);
 router.put("/update/:id", authenticateToken, isAdmin, updateAdministrator);
 router.delete("/delete/:id", authenticateToken, isAdmin, deleteAdministrator);
-router.get("/employee-history", authenticateToken, isAdmin, viewEmployeeHistory);
 
 export default {
     path: '/admin',
