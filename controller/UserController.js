@@ -1,6 +1,6 @@
 import User from "../model/UserModel.js";
 import {saveBase64Image} from "../utils/ImageHandler.js";
-import {hashPassword} from "../service/AuthService.js";
+import {hashPassword, loginWithToken} from "../service/AuthService.js";
 
 // REGISTER USER
 export const registerUser = async (req, res) => {
@@ -73,3 +73,55 @@ export const registerUser = async (req, res) => {
         });
     }
 }
+
+// LOGIN USER
+export const loginUser = async (req, res) => {
+    const {email_address, password} = req.body;
+
+    if (!email_address || email_address.trim().length === 0) {
+        return res.status(400).json({message: "Email address is required!", success: false});
+    }
+
+    if (!password || password.trim().length === 0) {
+        return res.status(400).json({message: "Password is required!", success: false});
+    }
+
+    const buildUserTokenPayload = (user) => ({
+        id: user._id,
+        email: user.email_address,
+        role: 'user'
+    });
+
+    const result = await loginWithToken(
+        User,
+        'email_address',
+        email_address,
+        'password',
+        password,
+        'refresh_token',
+        buildUserTokenPayload
+    );
+
+    if (!result.success) {
+        return res.status(result.status).json({
+            success: result.success,
+            message: result.message,
+            error: result.error
+        });
+    }
+
+    return res.status(result.status).json({
+        success: result.success,
+        message: result.message,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        user: {
+            id: result.user._id,
+            full_name: result.user.full_name,
+            email_address: result.user.email_address,
+            contact_number: result.user.contact_number,
+            user_image: result.user.user_image,
+            createdAt: result.user.createdAt
+        }
+    });
+};
