@@ -1,5 +1,7 @@
 import Employee from "../model/EmployeeModel.js";
-import {saveBase64Image, updateImage} from "../utils/ImageHandler.js";
+import {deleteImage, saveBase64Image, updateImage} from "../utils/ImageHandler.js";
+import Admin from "../model/AdminModel.js";
+import EmployeeHistoryModel from "../model/EmployeeHistoryModel.js";
 
 // REGISTER EMPLOYEE
 export const registerEmployee = async (req, res) => {
@@ -260,3 +262,61 @@ export const updateEmployee = async (req, res) => {
         });
     }
 }
+
+// DELETE EMPLOYEE
+export const deleteEmployee = async (req, res) => {
+    try {
+        const {id} = req.params;
+        const {description, occupation} = req.body;
+
+        const existingEmployee = await Employee.findById(id);
+
+        if (!existingEmployee) {
+            return res.status(404).json({
+                message: "Employee not found!",
+                success: false
+            });
+        }
+
+        const employeeHistory = new EmployeeHistoryModel({
+            full_name: existingEmployee.full_name,
+            contact_number: existingEmployee.contact_number,
+            email_address: existingEmployee.email_address,
+            user_image: existingEmployee.user_image,
+            registered_date: existingEmployee.createdAt,
+            release_date: new Date(),
+            occupation: occupation || existingEmployee.occupation,
+            description: description || "Employee account deleted by administrator",
+            admin_id: req.user.id
+        });
+
+        await employeeHistory.save();
+        await Employee.findByIdAndDelete(id);
+
+        if (existingEmployee.user_image) {
+            deleteImage(existingEmployee.user_image);
+        }
+
+        return res.status(200).json({
+            message: `${existingEmployee.full_name} successfully deleted!`,
+            success: true,
+            history: {
+                id: employeeHistory._id,
+                full_name: employeeHistory.full_name,
+                contact_number: employeeHistory.contact_number,
+                email_address: employeeHistory.email_address,
+                occupation: employeeHistory.occupation,
+                description: employeeHistory.description,
+                registered_date: employeeHistory.registered_date,
+                release_date: employeeHistory.release_date
+            }
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: "Error deleting employee!",
+            success: false,
+            error: error.message
+        });
+    }
+};

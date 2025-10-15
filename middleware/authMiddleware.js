@@ -46,3 +46,17 @@ export const isAdmin = (req, res, next) => {
         });
     }
 };
+
+/**
+ * Middleware to check if user is user
+ */
+export const isUser = (req, res, next) => {
+    if (req.user && req.user.role === 'user') {
+        next();
+    } else {
+        return res.status(403).json({
+            message: "User access required!",
+            success: false
+        });
+    }
+};

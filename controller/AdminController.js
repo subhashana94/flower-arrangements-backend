@@ -283,7 +283,7 @@ export const deleteAdministrator = async (req, res) => {
             registered_date: existingAdmin.createdAt,
             release_date: new Date(),
             occupation: occupation || "Administrator",
-            description: description || "Admin account deleted",
+            description: description || "Account deleted by administrator",
             admin_id: existingAdmin._id
         });
 
@@ -300,6 +300,7 @@ export const deleteAdministrator = async (req, res) => {
             history: {
                 id: employeeHistory._id,
                 full_name: employeeHistory.full_name,
+                contact_number: employeeHistory.contact_number,
                 email_address: employeeHistory.email_address,
                 occupation: employeeHistory.occupation,
                 description: employeeHistory.description,

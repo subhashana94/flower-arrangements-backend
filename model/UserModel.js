@@ -11,6 +11,7 @@ const UserSchema = new mongoose.Schema({
     },
     email_address: {
         type: String,
+        required: true,
         unique: true,
     },
     password: {
@@ -18,6 +19,10 @@ const UserSchema = new mongoose.Schema({
         required: true,
     },
     user_image: {
+        type: String,
+        default: null,
+    },
+    refresh_token: {
         type: String,
         default: null,
     }
