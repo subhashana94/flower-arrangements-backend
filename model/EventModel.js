@@ -7,6 +7,7 @@ const eventSchema = new mongoose.Schema({
     },
     event_subtitle: {
         type: String,
+        enum: ['WEDDING CEREMONY', 'ENGAGEMENT CEREMONY', 'BIRTHDAY PARTY', 'PRIVATE PARTY', 'RELIGION CEREMONY', 'OTHERS'],
         required: true,
     },
     short_description: {
@@ -25,8 +26,8 @@ const eventSchema = new mongoose.Schema({
         enum: ['upcoming', 'completed', 'canceled'],
         default: 'completed',
     },
-    image: {
-        type: String,
+    images: {
+        type: [String],
         required: true,
     },
     special_requirements: {

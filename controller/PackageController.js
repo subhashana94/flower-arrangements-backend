@@ -1,5 +1,4 @@
 import Package from '../model/PackageModel.js';
-import {deleteImage} from "../utils/ImageHandler.js";
 
 // CREATE PACKAGE
 export const createPackage = async (req, res) => {
