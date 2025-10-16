@@ -219,3 +219,86 @@ export const updateComment = async (req, res) => {
         });
     }
 }
+
+// DELETE COMMENT BY USER
+export const deleteCommentUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                message: "Invalid comment ID format!",
+                success: false
+            });
+        }
+
+        const existingComment = await Comments.findById(id);
+
+        if (!existingComment) {
+            return res.status(404).json({
+                message: "Comment not found!",
+                success: false
+            });
+        }
+
+        if (existingComment.user_id.toString() !== userId) {
+            return res.status(403).json({
+                message: "You can only delete your own comments!",
+                success: false
+            });
+        }
+
+        await Comments.findByIdAndDelete(id);
+
+        return res.status(200).json({
+            message: "Comment successfully deleted!",
+            success: true
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: "Error deleting comment!",
+            success: false,
+            error: error.message
+        });
+    }
+}
+
+// DELETE COMMENT BY ADMIN
+export const deleteCommentAdmin = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                message: "Invalid comment ID format!",
+                success: false
+            });
+        }
+
+        const existingComment = await Comments.findById(id);
+
+        if (!existingComment) {
+            return res.status(404).json({
+                message: "Comment not found!",
+                success: false
+            });
+        }
+
+        await Comments.findByIdAndDelete(id);
+
+        return res.status(200).json({
+            message: "Comment successfully deleted!",
+            success: true
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: "Error deleting comment!",
+            success: false,
+            error: error.message
+        });
+    }
+}
+
