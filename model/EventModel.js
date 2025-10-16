@@ -23,8 +23,8 @@ const eventSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['upcoming', 'completed', 'canceled'],
-        default: 'completed',
+        enum: ['UPCOMING', 'COMPLETED', 'CANCELED'],
+        default: 'COMPLETED',
     },
     images: {
         type: [String],
